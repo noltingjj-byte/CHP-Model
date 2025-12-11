@@ -40,6 +40,26 @@ def export_word(kpis: dict, schedule_table, chart_path: str, outfile: str = "CHP
         doc.add_heading('Annual Cash Flow Chart', level=2)
         doc.add_picture(chart_path, width=Inches(6.0))
 
+
+    # Assumptions block
+    doc.add_heading('Assumptions', level=2)
+    doc.add_paragraph("Methodology: EPA CHP total system efficiency (We + Qth)/Qfuel. Units kept on HHV basis for consistency.")
+    doc.add_paragraph(
+        f"Financing: Debt fraction {kpis.get('debt_frac_display','60%')}, "
+        f"interest {kpis.get('interest_display','7%')} (real), term {kpis.get('term_display','10 years')}, "
+        f"tax rate {kpis.get('tax_rate_display','25%')}, project life {kpis.get('life_display','20 years')}."
+    )
+    # Thermal valuation assumptions
+    doc.add_paragraph(
+        f"Thermal valuation: ${kpis.get('thermal_value_display','$8.00')}/MMBtu. "
+        f"Basis: avoided boiler cost or thermal sales; quick boiler displacement estimate ≈ gas $/MMBtu ÷ boiler efficiency."
+    )
+    # NEW: show BTU/hr rate when used
+    if kpis.get('thermal_btu_per_hr_display'):
+        doc.add_paragraph(f"Thermal output
+
+    
     doc.add_paragraph("Methodology aligns with EPA CHP efficiency framework (total system efficiency).")
     doc.save(outfile)
     return outfile
+
