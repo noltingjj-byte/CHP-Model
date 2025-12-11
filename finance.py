@@ -54,13 +54,21 @@ def annual_schedule(params):
     # Fuel input (MMBtu) based on electrical efficiency
     fuel_mmbtu_total = elec_kwh * (kwh_to_mmbtu / elec_eff_frac)
 
-    # Useful thermal energy (MMBtu)
-    if params.get('therm_output_kw'):
-        therm_mmbtu = params['therm_output_kw'] * hrs * kwh_to_mmbtu
+    
+    # Useful thermal energy recovered (MMBtu) -- support BTU/hr or efficiency mode
+    therm_mmbtu = 0.0
+    # Prefer BTU/hr if provided (>0); convert BTU/hr × hours → MMBtu/year
+    if params.get('therm_output_btu_per_hr', 0.0) and params['therm_output_btu_per_hr'] > 0.0:
+        therm_mmbtu = (params['therm_output_btu_per_hr'] * hrs) / 1_000_000.0  # 1 MMBtu = 1,000,000 BTU
+        therm_eff_frac = therm_mmbtu / fuel_mmbtu_total if fuel_mmbtu_total > 0 else 0.0
+    elif params.get('therm_output_kw', 0.0) and params['therm_output_kw'] > 0.0:
+        # Legacy kW thermal output support: kW × hours × 0.003412 MMBtu/kWh
+        therm_mmbtu = params['therm_output_kw'] * hrs * 0.003412
         therm_eff_frac = therm_mmbtu / fuel_mmbtu_total if fuel_mmbtu_total > 0 else 0.0
     else:
         therm_eff_frac = (params.get('therm_eff_pct', 0.0) / 100.0)
-        therm_mmbtu = fuel_mmbtu_total * therm_eff_frac
+        therm_mmbtu = fuel_mmbtu
+
 
     # Total system efficiency (EPA definition)
     # EPA reference: CHP total system efficiency is (We + Qth) / Qfuel.
@@ -111,3 +119,4 @@ def annual_schedule(params):
         cashflows.append(net)
 
     return schedule, cashflows, total_eff
+
